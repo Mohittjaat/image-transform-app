@@ -1,4 +1,15 @@
 import streamlit as st
+import sys
+
+st.write("✅ Python version:", sys.version)
+
+
+
+
+
+
+
+import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
