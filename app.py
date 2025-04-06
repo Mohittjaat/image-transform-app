@@ -4,7 +4,6 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 
-# Edge detection helper
 def apply_edge_detection(image, method, threshold1=100, threshold2=200):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     if method == "Sobel":
@@ -15,19 +14,15 @@ def apply_edge_detection(image, method, threshold1=100, threshold2=200):
         return cv2.Canny(gray, threshold1, threshold2)
     return gray
 
-# Cartoon effect
 def apply_cartoon_effect(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     gray = cv2.medianBlur(gray, 5)
-    edges = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
-        cv2.THRESH_BINARY, 9, 9
-    )
+    edges = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                   cv2.THRESH_BINARY, 9, 9)
     color = cv2.bilateralFilter(image, 9, 250, 250)
     cartoon = cv2.bitwise_and(color, color, mask=edges)
     return cartoon
 
-# All transformations
 def apply_transformation(image, transformation, canny_thresh1=100, canny_thresh2=200, blur_ksize=15):
     if transformation == 'Grayscale':
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -72,10 +67,10 @@ def apply_transformation(image, transformation, canny_thresh1=100, canny_thresh2
         return apply_cartoon_effect(image)
     return image
 
-# Streamlit UI
 def main():
+    st.set_page_config(page_title="Image Transformer", layout="wide")
     st.title("🖼️ Image Transformation App")
-    st.write("Upload an image and apply various transformations.")
+    st.write("Upload an image and apply transformations. The results will appear side by side.")
 
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
@@ -84,8 +79,6 @@ def main():
         image_np = np.array(image)
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
-        st.image(image, caption="Uploaded Image", use_column_width=True)
-
         transformations = [
             'Grayscale', 'Resize', 'Blur', 'Sharpen',
             'Fourier Transform', 'Frequency Domain',
@@ -93,8 +86,10 @@ def main():
             'Histogram Equalization', 'Unsharp Masking',
             'Sketchify', 'Cartoon Effect'
         ]
+
         transformation = st.selectbox("Select a transformation:", transformations)
 
+        # Extra controls if needed
         blur_ksize = st.slider("Blur Kernel Size", 3, 51, 15, step=2) if transformation == 'Blur' else 15
         canny_thresh1 = st.slider("Canny Threshold 1", 0, 300, 100) if transformation == 'Edge Detection - Canny' else 100
         canny_thresh2 = st.slider("Canny Threshold 2", 0, 300, 200) if transformation == 'Edge Detection - Canny' else 200
@@ -105,16 +100,24 @@ def main():
                 canny_thresh1, canny_thresh2, blur_ksize
             )
 
-            if transformation in ['Fourier Transform', 'Frequency Domain']:
-                fig, ax = plt.subplots()
-                ax.imshow(result, cmap='gray')
-                ax.set_title(transformation)
-                ax.axis('off')
-                st.pyplot(fig)
-            elif len(result.shape) == 2:
-                st.image(result, caption=f"{transformation}", use_column_width=True, channels="GRAY")
-            else:
-                st.image(result, caption=f"{transformation}", use_column_width=True, channels="BGR")
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.subheader("Original Image")
+                st.image(image, use_column_width=True)
+
+            with col2:
+                st.subheader(f"Transformed - {transformation}")
+                if transformation in ['Fourier Transform', 'Frequency Domain']:
+                    fig, ax = plt.subplots()
+                    ax.imshow(result, cmap='gray')
+                    ax.set_title(transformation)
+                    ax.axis('off')
+                    st.pyplot(fig)
+                elif len(result.shape) == 2:
+                    st.image(result, use_column_width=True, channels="GRAY")
+                else:
+                    st.image(result, use_column_width=True, channels="BGR")
 
 if __name__ == "__main__":
     main()
