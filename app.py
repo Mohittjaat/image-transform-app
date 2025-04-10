@@ -34,12 +34,6 @@ def apply_transformation(image, transformation, canny_thresh1=100, canny_thresh2
     elif transformation == 'Sharpen':
         kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
         return cv2.filter2D(image, -1, kernel)
-    elif transformation == 'Fourier Transform':
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        f = np.fft.fft2(gray)
-        fshift = np.fft.fftshift(f)
-        magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1)
-        return magnitude_spectrum
     elif transformation == 'Frequency Domain':
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         dft = cv2.dft(np.float32(gray), flags=cv2.DFT_COMPLEX_OUTPUT)
@@ -81,7 +75,7 @@ def main():
 
         transformations = [
             'Grayscale', 'Resize', 'Blur', 'Sharpen',
-            'Fourier Transform', 'Frequency Domain',
+            'Frequency Domain',
             'Edge Detection - Sobel', 'Edge Detection - Canny',
             'Histogram Equalization', 'Unsharp Masking',
             'Sketchify', 'Cartoon Effect'
@@ -89,7 +83,6 @@ def main():
 
         transformation = st.selectbox("Select a transformation:", transformations)
 
-        # Extra controls if needed
         blur_ksize = st.slider("Blur Kernel Size", 3, 51, 15, step=2) if transformation == 'Blur' else 15
         canny_thresh1 = st.slider("Canny Threshold 1", 0, 300, 100) if transformation == 'Edge Detection - Canny' else 100
         canny_thresh2 = st.slider("Canny Threshold 2", 0, 300, 200) if transformation == 'Edge Detection - Canny' else 200
@@ -108,7 +101,7 @@ def main():
 
             with col2:
                 st.subheader(f"Transformed - {transformation}")
-                if transformation in ['Fourier Transform', 'Frequency Domain']:
+                if transformation == 'Frequency Domain':
                     fig, ax = plt.subplots()
                     ax.imshow(result, cmap='gray')
                     ax.set_title(transformation)
